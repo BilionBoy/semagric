@@ -1,11 +1,13 @@
-import type { Usuario } from "./Usuario"
+import type { Usuario } from "./Usuario";
 
 export interface LoginResponse {
-  token: string
-  user: Usuario
+  token: string;
+  user: Usuario;
+  error?: string;
+  message?: string;
 }
 
 export interface LoginCredentials {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }

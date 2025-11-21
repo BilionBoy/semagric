@@ -1,109 +1,183 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Tags, Plus, Trash2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { useSegmentosManager } from "../hooks/use-segmentos-manager"
-import type { Segmento } from "@/src/@types"
+import { useState } from "react";
+import { Plus, Trash2, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { Segmento } from "@/@types";
+import { useToast } from "@/hooks/use-toast";
+import { useSegmentos } from "../hooks/use-segmentos";
 
-interface SegmentosManagerProps {
-  segmentos: Segmento[]
-  onUpdate: (segmentos: Segmento[]) => void
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface Props {
+  segmentos: Segmento[];
+  onUpdate: (segmentos: Segmento[]) => void;
 }
 
-export function SegmentosManager({ segmentos, onUpdate }: SegmentosManagerProps) {
-  const { toast } = useToast()
-  const { addSegmento, deleteSegmento, isAdding, isDeleting } = useSegmentosManager()
-  const [newSegmento, setNewSegmento] = useState("")
+export function SegmentosManager({ segmentos, onUpdate }: Props) {
+  const { toast } = useToast();
+  const { create, update, remove } = useSegmentos();
 
-  const handleAdd = async () => {
-    if (!newSegmento.trim()) return
+  const [novo, setNovo] = useState("");
 
-    try {
-      const created = await addSegmento({ descricao: newSegmento })
-      onUpdate([...segmentos, created])
-      setNewSegmento("")
-      toast({
-        title: "Segmento Adicionado",
-        description: "Segmento cadastrado com sucesso!",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível adicionar o segmento.",
-        variant: "destructive",
-      })
-    }
-  }
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir este segmento?")) return
+  const handleCreate = async () => {
+    if (!novo.trim()) return;
 
     try {
-      await deleteSegmento(id)
-      onUpdate(segmentos.filter((s) => s.id !== id))
+      const created = await create(novo);
+      onUpdate([...segmentos, created]);
+      setNovo("");
+
       toast({
-        title: "Segmento Excluído",
-        description: "Segmento removido com sucesso!",
-      })
-    } catch (error: any) {
+        title: "Segmento criado",
+        description: "Registro criado com sucesso.",
+      });
+    } catch (e: any) {
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível excluir o segmento.",
+        description: e.message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
+
+  const handleUpdate = async (seg: Segmento) => {
+    try {
+      const updated = await update(seg.id, seg.descricao);
+      const list = segmentos.map((s) => (s.id === seg.id ? updated : s));
+      onUpdate(list);
+
+      toast({
+        title: "Atualizado",
+        description: "Registro atualizado com sucesso.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "Erro",
+        description: e.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setSelectedId(id);
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await remove(selectedId);
+      const list = segmentos.filter((s) => s.id !== selectedId);
+      onUpdate(list);
+
+      toast({
+        title: "Removido",
+        description: "Registro removido com sucesso.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "Erro",
+        description: e.message,
+        variant: "destructive",
+      });
+    } finally {
+      setShowConfirm(false);
+      setSelectedId(null);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-green-800">Gerenciar Segmentos</h2>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Nome do segmento"
-            value={newSegmento}
-            onChange={(e) => setNewSegmento(e.target.value)}
-            className="w-64"
-          />
-          <Button onClick={handleAdd} disabled={isAdding || !newSegmento.trim()}>
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
-          </Button>
-        </div>
+    <div className="bg-white p-6 rounded-xl shadow space-y-6">
+      {/* Criar novo */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Novo segmento..."
+          value={novo}
+          onChange={(e) => setNovo(e.target.value)}
+        />
+        <Button onClick={handleCreate}>
+          <Plus className="w-4 h-4 mr-2" />
+          Adicionar
+        </Button>
       </div>
 
-      {segmentos.length === 0 ? (
-        <div className="text-center py-12">
-          <Tags className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Nenhum segmento cadastrado</p>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {segmentos.map((seg) => (
-            <div
-              key={seg.id}
-              className="bg-green-50 rounded-lg p-4 flex justify-between items-center border border-green-200"
+      {/* Lista */}
+      <div className="space-y-3">
+        {segmentos.map((seg) => (
+          <div
+            key={seg.id}
+            className="flex gap-2 items-center bg-green-50 p-3 rounded"
+          >
+            <Input
+              value={seg.descricao}
+              onChange={(e) => {
+                const list = segmentos.map((s) =>
+                  s.id === seg.id ? { ...s, descricao: e.target.value } : s
+                );
+                onUpdate(list);
+              }}
+            />
+
+            <Button
+              size="icon"
+              onClick={() => handleUpdate(seg)}
+              variant="ghost"
+              className="text-green-700"
             >
-              <div className="flex items-center gap-3">
-                <Tags className="w-5 h-5 text-green-700" />
-                <span className="font-semibold text-green-800">{seg.descricao}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(seg.id)}
-                className="text-red-600 hover:bg-red-50"
-                disabled={isDeleting}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
+              <Save className="w-4 h-4" />
+            </Button>
+
+            <Button
+              size="icon"
+              onClick={() => handleDeleteClick(seg.id)}
+              variant="ghost"
+              className="text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal de Confirmação */}
+      <AlertDialog open={showConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir segmento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este segmento?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirm(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-  )
+  );
 }

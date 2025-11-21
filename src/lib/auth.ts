@@ -1,34 +1,44 @@
-import { api } from "./api"
-import type { LoginResponse } from "@/src/@types"
+import type { LoginResponse } from "@/@types";
+import { api } from "./api";
 
 export const auth = {
   login: async (email: string, password: string): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>("/auth/login", { email, password })
-    if (response.token) {
-      localStorage.setItem("token", response.token)
-      localStorage.setItem("user", JSON.stringify(response.user))
+    try {
+      const json = await api.post<any>("/auth/login", {
+        email,
+        password,
+      });
+
+      // DEBUG CORRETO
+      console.log("LOGIN RESPONSE =>", json);
+
+      // Suporta JsonResponse e formato direto
+      const data = json.data ?? json;
+
+      if (!data?.token) {
+        throw new Error(json?.message || "Token não retornado pela API");
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      return data as LoginResponse;
+    } catch (err: any) {
+      throw new Error(err.message || "Erro inesperado no login");
     }
-    return response
   },
 
-  logout: (): void => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
+  logout: () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   },
 
-  isAuthenticated: (): boolean => {
-    if (typeof window === "undefined") return false
-    return !!localStorage.getItem("token")
+  isAuthenticated: () => !!localStorage.getItem("token"),
+
+  getUser: () => {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
   },
 
-  getUser: (): any => {
-    if (typeof window === "undefined") return null
-    const user = localStorage.getItem("user")
-    return user ? JSON.parse(user) : null
-  },
-
-  getToken: (): string | null => {
-    if (typeof window === "undefined") return null
-    return localStorage.getItem("token")
-  },
-}
+  getToken: () => localStorage.getItem("token"),
+};
