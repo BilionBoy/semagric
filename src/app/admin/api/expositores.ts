@@ -1,6 +1,5 @@
 import { api } from "@/lib/api";
 import type { Expositor } from "@/@types";
-
 export const expositoresApi = {
   list: () => api.get<Expositor[]>("/e_expositores"),
 
@@ -13,4 +12,9 @@ export const expositoresApi = {
     api.put<Expositor>(`/e_expositores/${id}`, data),
 
   delete: (id: number) => api.delete(`/e_expositores/${id}`),
+
+  updatePassword: (id: number, password: string) =>
+    api.patch<Expositor>(`/e_expositores/${id}/password`, {
+      password,
+    }),
 };

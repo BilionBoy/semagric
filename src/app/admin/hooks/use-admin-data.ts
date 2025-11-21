@@ -6,6 +6,7 @@ import { clientesApi } from "../api/clientes";
 import { negociacoesApi } from "../api/negociacoes";
 import { segmentosApi } from "../api/segmentos";
 import { tiposExpositoresApi } from "../api/tipos-expositores";
+
 import type {
   Expositor,
   Cliente,
@@ -27,7 +28,6 @@ export function useAdminData() {
     try {
       const token = localStorage.getItem("token");
 
-      // Se não estiver autenticado, não faz requisição
       if (!token) {
         setLoading(false);
         return;
@@ -56,7 +56,7 @@ export function useAdminData() {
       setTiposExpositores(tiposData);
       setError(null);
     } catch (err: any) {
-      console.error("[AdminData] Erro ao carregar:", err);
+      console.error("Erro ao carregar dados admin:", err);
       setError(err.message || "Erro ao carregar dados");
     } finally {
       setLoading(false);
@@ -64,12 +64,7 @@ export function useAdminData() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      loadData();
-    } else {
-      setLoading(false);
-    }
+    loadData();
   }, [loadData]);
 
   return {

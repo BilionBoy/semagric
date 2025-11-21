@@ -2,36 +2,42 @@ import type { LoginResponse } from "@/@types";
 import { api } from "./api";
 
 export const auth = {
-  login: async (email: string, password: string): Promise<LoginResponse> => {
-    try {
-      const json = await api.post<any>("/auth/login", {
-        email,
-        password,
-      });
+  loginAdmin: async (email: string, password: string) => {
+    const json = await api.post<any>("/auth/login", { email, password });
+    const data = json.data ?? json;
 
-      // DEBUG CORRETO
-      console.log("LOGIN RESPONSE =>", json);
-
-      // Suporta JsonResponse e formato direto
-      const data = json.data ?? json;
-
-      if (!data?.token) {
-        throw new Error(json?.message || "Token não retornado pela API");
-      }
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      return data as LoginResponse;
-    } catch (err: any) {
-      throw new Error(err.message || "Erro inesperado no login");
+    if (!data?.token) {
+      throw new Error(json?.message || "Token não retornado pela API");
     }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", "admin");
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    return data;
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  loginExpositor: async (email: string, password: string) => {
+    const json = await api.post<any>("/expositor/login", {
+      email,
+      password,
+    });
+
+    const data = json.data ?? json;
+
+    if (!data?.token) {
+      throw new Error(json?.message || "Token não retornado pela API");
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", "expositor");
+    localStorage.setItem("currentExpositorId", String(data.expositor.id));
+    localStorage.setItem("user", JSON.stringify(data.expositor));
+
+    return data;
   },
+
+  logout: () => localStorage.clear(),
 
   isAuthenticated: () => !!localStorage.getItem("token"),
 
@@ -41,4 +47,5 @@ export const auth = {
   },
 
   getToken: () => localStorage.getItem("token"),
+  getRole: () => localStorage.getItem("role"),
 };

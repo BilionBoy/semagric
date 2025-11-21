@@ -33,35 +33,41 @@ class ApiClient {
       headers,
     });
 
+    const json = await response.json().catch(() => null);
+
     if (!response.ok) {
-      const error: ApiError = await response
-        .json()
-        .catch(() => ({ error: "Erro desconhecido" }));
-      throw new Error(error.error || `Erro ${response.status}`);
+      throw new Error(json?.error || json?.message || "Erro inesperado");
     }
 
-    return response.json();
+    return json as T;
   }
 
-  async get<T>(endpoint: string): Promise<T> {
+  get<T>(endpoint: string) {
     return this.request<T>(endpoint);
   }
 
-  async post<T>(endpoint: string, data: unknown): Promise<T> {
+  post<T>(endpoint: string, data: unknown) {
     return this.request<T>(endpoint, {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async put<T>(endpoint: string, data: unknown): Promise<T> {
+  put<T>(endpoint: string, data: unknown) {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
+  patch<T>(endpoint: string, data: unknown) {
+    return this.request<T>(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  delete<T>(endpoint: string) {
     return this.request<T>(endpoint, {
       method: "DELETE",
     });

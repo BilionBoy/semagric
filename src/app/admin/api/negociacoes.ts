@@ -6,6 +6,10 @@ export const negociacoesApi = {
 
   getById: (id: number) => api.get<Negociacao>(`/e_negociacoes/${id}`),
 
+  // ✅ ADICIONE ISSO
+  getByExpositor: (expositorId: number) =>
+    api.get<Negociacao[]>(`/e_negociacoes?e_expositor_id=${expositorId}`),
+
   create: (data: Partial<Negociacao>) =>
     api.post<Negociacao>("/e_negociacoes", data),
 

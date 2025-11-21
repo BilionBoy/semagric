@@ -6,6 +6,10 @@ export const clientesApi = {
 
   getById: (id: number) => api.get<Cliente>(`/e_clientes/${id}`),
 
+  // ✅ ADICIONE ISSO
+  getByExpositor: (expositorId: number) =>
+    api.get<Cliente[]>(`/e_clientes?e_expositor_id=${expositorId}`),
+
   create: (data: Partial<Cliente>) => api.post<Cliente>("/e_clientes", data),
 
   update: (id: number, data: Partial<Cliente>) =>
