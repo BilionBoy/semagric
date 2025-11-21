@@ -1,0 +1,11 @@
+// Re-export all types for easier imports
+export * from "./Usuario"
+export * from "./Auth"
+export * from "./Expositor"
+export * from "./Cliente"
+export * from "./Negociacao"
+export * from "./Segmento"
+export * from "./TipoExpositor"
+export * from "./Evento"
+export * from "./Dashboard"
+export * from "./common.d"
