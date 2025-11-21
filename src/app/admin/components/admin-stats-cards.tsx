@@ -1,13 +1,20 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Building2, Users, DollarSign, BarChartHorizontal } from "lucide-react"
+import { motion } from "framer-motion";
+import {
+  Users,
+  UserCheck,
+  DollarSign,
+  BarChart3,
+  TrendingUp,
+} from "lucide-react";
 
-interface AdminStatsCardsProps {
-  totalExpositores: number
-  totalClientes: number
-  totalNegociacoes: number
-  totalValue: number
+interface Props {
+  totalExpositores: number;
+  totalClientes: number;
+  totalNegociacoes: number;
+  totalValue: number;
+  ticketMedio?: number;
 }
 
 export function AdminStatsCards({
@@ -15,67 +22,63 @@ export function AdminStatsCards({
   totalClientes,
   totalNegociacoes,
   totalValue,
-}: AdminStatsCardsProps) {
+  ticketMedio = 0,
+}: Props) {
+  const cards = [
+    {
+      title: "Expositores",
+      value: totalExpositores,
+      icon: Users,
+      color: "bg-green-600",
+    },
+    {
+      title: "Visitantes",
+      value: totalClientes,
+      icon: UserCheck,
+      color: "bg-green-600",
+    },
+    {
+      title: "Volume Total",
+      value: `R$ ${Number(totalValue || 0).toLocaleString("pt-BR")}`,
+      icon: DollarSign,
+      color: "bg-orange-600",
+    },
+    {
+      title: "Negócios",
+      value: totalNegociacoes,
+      icon: BarChart3,
+      color: "bg-green-600",
+    },
+    {
+      title: "Ticket Médio",
+      value: `R$ ${Number(ticketMedio || 0).toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+      })}`,
+      icon: TrendingUp,
+      color: "bg-orange-600",
+    },
+  ];
+
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="amazon-gradient w-12 h-12 rounded-full flex items-center justify-center">
-            <Building2 className="w-6 h-6 text-white" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+      {cards.map((card, idx) => (
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.05 }}
+          className="bg-white p-6 rounded-2xl shadow"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`p-3 rounded-full text-white ${card.color}`}>
+              <card.icon className="w-5 h-5" />
+            </div>
+            <span className="text-sm font-semibold">{card.title}</span>
           </div>
-        </div>
-        <p className="text-gray-600 text-sm mb-1">Expositores</p>
-        <p className="text-2xl font-bold text-green-800">{totalExpositores}</p>
-      </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="amazon-gradient w-12 h-12 rounded-full flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
-          </div>
-        </div>
-        <p className="text-gray-600 text-sm mb-1">Visitantes</p>
-        <p className="text-2xl font-bold text-green-800">{totalClientes}</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="earth-gradient w-12 h-12 rounded-full flex items-center justify-center">
-            <DollarSign className="w-6 h-6 text-white" />
-          </div>
-        </div>
-        <p className="text-gray-600 text-sm mb-1">Volume Total</p>
-        <p className="text-2xl font-bold text-green-800">R$ {totalValue.toLocaleString("pt-BR")}</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="amazon-gradient w-12 h-12 rounded-full flex items-center justify-center">
-            <BarChartHorizontal className="w-6 h-6 text-white" />
-          </div>
-        </div>
-        <p className="text-gray-600 text-sm mb-1">Negócios</p>
-        <p className="text-2xl font-bold text-green-800">{totalNegociacoes}</p>
-      </motion.div>
+          <div className="text-2xl font-bold text-green-700">{card.value}</div>
+        </motion.div>
+      ))}
     </div>
-  )
+  );
 }

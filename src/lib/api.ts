@@ -1,14 +1,17 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
-interface ApiError {
-  error: string;
-}
-
 class ApiClient {
   private getToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("token");
+    }
+    return null;
+  }
+
+  private getExpositorId(): string | null {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("currentExpositorId");
     }
     return null;
   }
@@ -18,6 +21,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const token = this.getToken();
+    const expositorId = this.getExpositorId();
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -28,9 +32,14 @@ class ApiClient {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    if (expositorId) {
+      headers["X-Expositor-Id"] = expositorId;
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
+      credentials: "include",
     });
 
     const json = await response.json().catch(() => null);

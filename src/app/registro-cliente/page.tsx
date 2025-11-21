@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -12,7 +11,9 @@ import {
   Phone,
   MapPin,
   MessageSquare,
+  Building2,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,11 +25,14 @@ export default function ClientRegistration() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     nome: "",
     telefone: "",
     email: "",
     endereco: "",
+    cidade: "",
+    estado: "",
     interesse: "",
   });
 
@@ -41,23 +45,20 @@ export default function ClientRegistration() {
     setLoading(true);
 
     try {
-      const expositorId = localStorage.getItem("currentExpositorId");
+      const expositorId = localStorage.getItem("expositor_id");
 
       if (!expositorId) {
-        toast({
-          title: "Erro",
-          description: "ID do expositor não encontrado.",
-          variant: "destructive",
-        });
-        router.push("/cadastro-expositor");
-        return;
+        throw new Error("Expositor não encontrado. Faça login novamente.");
       }
 
       await clientesApi.create({
-        e_cliente: {
-          e_expositor_id: Number.parseInt(expositorId),
-          ...formData,
-        },
+        nome: formData.nome,
+        telefone: formData.telefone,
+        email: formData.email,
+        endereco: formData.endereco,
+        cidade: formData.cidade,
+        estado: formData.estado,
+        interesse: formData.interesse,
       });
 
       toast({
@@ -112,101 +113,124 @@ export default function ClientRegistration() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Nome */}
               <div className="space-y-2">
-                <Label htmlFor="nome" className="text-green-800 font-semibold">
+                <Label className="text-green-800 font-semibold">
                   Nome Completo *
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 w-5 h-5 text-green-600" />
                   <Input
-                    id="nome"
                     required
                     value={formData.nome}
                     onChange={(e) => handleChange("nome", e.target.value)}
-                    className="pl-10 border-green-200 focus:border-green-500"
+                    className="pl-10"
                     placeholder="Nome do cliente"
                   />
                 </div>
               </div>
 
+              {/* Email + Telefone */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-green-800 font-semibold"
-                  >
+                  <Label className="text-green-800 font-semibold">
                     E-mail *
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-5 h-5 text-green-600" />
                     <Input
-                      id="email"
                       type="email"
                       required
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      className="pl-10 border-green-200 focus:border-green-500"
+                      className="pl-10"
                       placeholder="email@exemplo.com"
                     />
                   </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="telefone"
-                    className="text-green-800 font-semibold"
-                  >
+                  <Label className="text-green-800 font-semibold">
                     Telefone *
                   </Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-3 w-5 h-5 text-green-600" />
                     <Input
-                      id="telefone"
                       required
                       value={formData.telefone}
                       onChange={(e) => handleChange("telefone", e.target.value)}
-                      className="pl-10 border-green-200 focus:border-green-500"
+                      className="pl-10"
                       placeholder="(69) 99999-9999"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Endereço */}
               <div className="space-y-2">
-                <Label
-                  htmlFor="endereco"
-                  className="text-green-800 font-semibold"
-                >
+                <Label className="text-green-800 font-semibold">
                   Endereço *
                 </Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 w-5 h-5 text-green-600" />
                   <Input
-                    id="endereco"
                     required
                     value={formData.endereco}
                     onChange={(e) => handleChange("endereco", e.target.value)}
-                    className="pl-10 border-green-200 focus:border-green-500"
-                    placeholder="Rua, número, bairro, cidade"
+                    className="pl-10"
+                    placeholder="Rua, número, bairro"
                   />
                 </div>
               </div>
 
+              {/* Cidade + Estado */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-green-800 font-semibold">
+                    Cidade *
+                  </Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-3 w-5 h-5 text-green-600" />
+                    <Input
+                      required
+                      value={formData.cidade}
+                      onChange={(e) => handleChange("cidade", e.target.value)}
+                      className="pl-10"
+                      placeholder="Cidade"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-green-800 font-semibold">
+                    Estado (UF) *
+                  </Label>
+                  <Input
+                    required
+                    maxLength={2}
+                    value={formData.estado}
+                    onChange={(e) =>
+                      handleChange("estado", e.target.value.toUpperCase())
+                    }
+                    className="pl-3"
+                    placeholder="RO"
+                  />
+                </div>
+              </div>
+
+              {/* Interesse */}
               <div className="space-y-2">
-                <Label
-                  htmlFor="interesse"
-                  className="text-green-800 font-semibold"
-                >
+                <Label className="text-green-800 font-semibold">
                   Interesse *
                 </Label>
                 <div className="relative">
                   <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-green-600" />
                   <Textarea
-                    id="interesse"
                     required
                     value={formData.interesse}
                     onChange={(e) => handleChange("interesse", e.target.value)}
-                    className="pl-10 border-green-200 focus:border-green-500 min-h-[100px]"
-                    placeholder="Descreva o interesse do cliente (produtos, serviços, etc.)"
+                    className="pl-10 min-h-[100px]"
+                    placeholder="Descreva o interesse do cliente"
                   />
                 </div>
               </div>

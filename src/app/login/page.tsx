@@ -38,7 +38,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      console.log("🔐 Tentando login como:", mode);
+      localStorage.clear();
 
       if (mode === "admin") {
         await auth.loginAdmin(loginData.email, loginData.password);

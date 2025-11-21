@@ -1,4 +1,3 @@
-import type { LoginResponse } from "@/@types";
 import { api } from "./api";
 
 export const auth = {
@@ -10,25 +9,27 @@ export const auth = {
       throw new Error(json?.message || "Token não retornado pela API");
     }
 
+    localStorage.clear();
+
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", "admin");
     localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.removeItem("currentExpositorId");
 
     return data;
   },
 
   loginExpositor: async (email: string, password: string) => {
-    const json = await api.post<any>("/expositor/login", {
-      email,
-      password,
-    });
-
+    const json = await api.post<any>("/expositor/login", { email, password });
     const data = json.data ?? json;
 
     if (!data?.token) {
-      throw new Error(json?.message || "Token não retornado pela API");
+      throw new Error(json?.message || "Token do expositor não retornado");
     }
 
+    localStorage.clear();
+
+    // ✅ SALVA JWT
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", "expositor");
     localStorage.setItem("currentExpositorId", String(data.expositor.id));
@@ -47,5 +48,11 @@ export const auth = {
   },
 
   getToken: () => localStorage.getItem("token"),
+
   getRole: () => localStorage.getItem("role"),
+
+  getCurrentExpositorId: () => {
+    const id = localStorage.getItem("currentExpositorId");
+    return id ? Number(id) : null;
+  },
 };

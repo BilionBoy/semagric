@@ -9,6 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
+import { TopExpositoresChart } from "@/app/admin/components/top-expositores-chart";
+import { TopInteressesChart } from "@/app/admin/components/top-interesses-chart";
+import { TopCidadesChart } from "@/app/admin/components/top-cidades-chart";
+
 import { auth } from "@/lib/auth";
 import { useAdminData } from "@/app/admin/hooks/use-admin-data";
 import { useTiposManager } from "@/app/admin/hooks/use-tipos-manager";
@@ -23,19 +27,6 @@ export default function AdminDashboard() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [newTipoExpositor, setNewTipoExpositor] = useState("");
 
-  // =======================
-  // PROTEÇÃO DE ROTA
-  // =======================
-  useEffect(() => {
-    const isAuth = auth.isAuthenticated();
-
-    if (!isAuth) {
-      router.replace("/login");
-    } else {
-      setIsCheckingAuth(false);
-    }
-  }, [router]);
-
   const {
     expositores,
     clientes,
@@ -48,6 +39,17 @@ export default function AdminDashboard() {
   } = useAdminData();
 
   const { addTipo, deleteTipo } = useTiposManager();
+
+  // =======================
+  // PROTEÇÃO DE ROTA
+  // =======================
+  useEffect(() => {
+    if (!auth.isAuthenticated()) {
+      router.replace("/login");
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, [router]);
 
   // =======================
   // LOGOUT
@@ -83,19 +85,48 @@ export default function AdminDashboard() {
   };
 
   // =======================
-  // STATS
+  // CÁLCULOS
   // =======================
+  const totalValor = negociacoes.reduce((s, n) => s + Number(n.valor || 0), 0);
+
+  const ticketMedio =
+    negociacoes.length > 0 ? totalValor / negociacoes.length : 0;
+
   const stats = {
     totalExpositores: expositores.length,
     totalClientes: clientes.length,
     totalNegociacoes: negociacoes.length,
-    totalValue: negociacoes.reduce((s, n) => s + Number(n.valor || 0), 0),
+    totalValue: totalValor,
+    ticketMedio,
   };
 
+  const topExpositores = expositores.map((e) => ({
+    name: e.empresa || e.nome_completo || "Sem Nome",
+    value: negociacoes
+      .filter((n) => n.e_expositor_id === e.id)
+      .reduce((s, n) => s + Number(n.valor || 0), 0),
+  }));
+
+  const topInteresses = clientes.reduce((acc: any[], c) => {
+    if (!c.interesse) return acc;
+    const found = acc.find((i) => i.name === c.interesse);
+    if (found) found.value++;
+    else acc.push({ name: c.interesse, value: 1 });
+    return acc;
+  }, []);
+
+  const topCidades = clientes.reduce((acc: any[], c) => {
+    if (!c.cidade) return acc;
+    const found = acc.find((i) => i.name === c.cidade);
+    if (found) found.value++;
+    else acc.push({ name: c.cidade, value: 1 });
+    return acc;
+  }, []);
+
   // =======================
-  // LOADING AUTENTICAÇÃO
+  // LOADERS
   // =======================
-  if (isCheckingAuth) {
+  if (isCheckingAuth || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full" />
@@ -104,18 +135,7 @@ export default function AdminDashboard() {
   }
 
   // =======================
-  // LOADING DADOS
-  // =======================
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  // =======================
-  // RENDER PRINCIPAL
+  // RENDER
   // =======================
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50">
@@ -132,7 +152,6 @@ export default function AdminDashboard() {
               onClick={() => router.push("/")}
               className="text-white hover:bg-green-700"
             >
-              <LayoutDashboard className="w-4 h-4 mr-2" />
               Início
             </Button>
 
@@ -148,85 +167,73 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <div className="flex">
-        <main className="flex-1 p-8" id="dashboard-section">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-7xl mx-auto space-y-8"
-          >
-            <h1 className="text-3xl font-bold text-green-800">
-              Dashboard Administrativo
-            </h1>
+      <main className="p-8 max-w-7xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold text-green-800">
+          Dashboard Administrativo
+        </h1>
 
-            <AdminStatsCards {...stats} />
+        {/* CARDS DE STATUS */}
+        <AdminStatsCards {...stats} />
 
-            <Tabs defaultValue="exhibitors">
-              <TabsList className="grid w-full grid-cols-5 bg-green-100">
-                <TabsTrigger id="expositores-tab" value="exhibitors">
-                  Expositores
-                </TabsTrigger>
-                <TabsTrigger id="visitantes-tab" value="visitors">
-                  Visitantes
-                </TabsTrigger>
-                <TabsTrigger id="negociacoes-tab" value="negotiations">
-                  Negociações
-                </TabsTrigger>
-                <TabsTrigger id="segmentos-tab" value="segments">
-                  Segmentos
-                </TabsTrigger>
-                <TabsTrigger id="tipos-tab" value="types">
-                  Tipos
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="exhibitors">
-                <ExpositoresManager
-                  expositores={expositores}
-                  onUpdate={() => {}}
+        {/* GRÁFICOS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <TopExpositoresChart data={topExpositores} />
+          <TopInteressesChart data={topInteresses} />
+        </div>
+
+        <TopCidadesChart data={topCidades} />
+
+        {/* TABS */}
+        <Tabs defaultValue="exhibitors">
+          <TabsList className="grid w-full grid-cols-5 bg-green-100">
+            <TabsTrigger value="exhibitors">Expositores</TabsTrigger>
+            <TabsTrigger value="visitors">Visitantes</TabsTrigger>
+            <TabsTrigger value="negotiations">Negociações</TabsTrigger>
+            <TabsTrigger value="segments">Segmentos</TabsTrigger>
+            <TabsTrigger value="types">Tipos</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="exhibitors">
+            <ExpositoresManager expositores={expositores} onUpdate={() => {}} />
+          </TabsContent>
+
+          <TabsContent value="segments">
+            <SegmentosManager segmentos={segmentos} onUpdate={setSegmentos} />
+          </TabsContent>
+
+          <TabsContent value="types">
+            <div className="bg-white p-6 rounded-xl shadow">
+              <div className="flex gap-2 mb-6">
+                <Input
+                  placeholder="Novo tipo"
+                  value={newTipoExpositor}
+                  onChange={(e) => setNewTipoExpositor(e.target.value)}
                 />
-              </TabsContent>
-              <TabsContent value="segments">
-                <SegmentosManager
-                  segmentos={segmentos}
-                  onUpdate={setSegmentos}
-                />
-              </TabsContent>
+                <Button onClick={handleAddTipo}>Adicionar</Button>
+              </div>
 
-              <TabsContent value="types">
-                <div className="bg-white p-6 rounded-xl shadow">
-                  <div className="flex gap-2 mb-6">
-                    <Input
-                      placeholder="Novo tipo"
-                      value={newTipoExpositor}
-                      onChange={(e) => setNewTipoExpositor(e.target.value)}
-                    />
-                    <Button onClick={handleAddTipo}>Adicionar</Button>
+              <div className="grid grid-cols-3 gap-3">
+                {tiposExpositores.map((t) => (
+                  <div
+                    key={t.id}
+                    className="bg-green-50 p-3 rounded flex justify-between items-center"
+                  >
+                    <span>{t.descricao}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteTipo(t.id)}
+                      className="text-red-600"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    {tiposExpositores.map((t) => (
-                      <div
-                        key={t.id}
-                        className="bg-green-50 p-3 rounded flex justify-between items-center"
-                      >
-                        <span>{t.descricao}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteTipo(t.id)}
-                          className="text-red-600"
-                        >
-                          <LogOut className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </motion.div>
-        </main>
-      </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 }

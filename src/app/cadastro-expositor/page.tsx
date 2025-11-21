@@ -88,27 +88,10 @@ export default function ExhibitorRegistration() {
     });
   };
 
+  // trechinho corrigido do seu handleSubmit
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (exhibitorType === "juridica" && !validateCNPJ(formData.document)) {
-      toast({
-        title: "CNPJ Inválido",
-        description: "Por favor, verifique o CNPJ informado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (exhibitorType === "fisica" && !validateCPF(formData.document)) {
-      toast({
-        title: "CPF Inválido",
-        description: "Por favor, verifique o CPF informado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -134,21 +117,22 @@ export default function ExhibitorRegistration() {
         },
       };
 
-      const response = await expositoresApi.create(payload);
-
-      localStorage.setItem("currentExpositorId", String((response as any).id));
+      await expositoresApi.create(payload);
 
       toast({
-        title: "Cadastro Realizado!",
-        description:
-          "Seu cadastro foi realizado com sucesso na AGROTEC PVH 2025.",
+        title: "Cadastro realizado!",
+        description: "Faça login como expositor para continuar.",
       });
 
-      setTimeout(() => router.push("/painel-expositor"), 1500);
+      // ✅ LIMPA SESSÃO ERRADA
+      setTimeout(() => {
+        localStorage.clear();
+        router.replace("/");
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Erro ao Cadastrar",
-        description: error.message || "Não foi possível completar o cadastro.",
+        description: error.message || "Erro ao cadastrar expositor",
         variant: "destructive",
       });
     } finally {
