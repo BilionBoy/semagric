@@ -39,18 +39,11 @@ export default function ClientRegistration() {
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const expositorId = localStorage.getItem("expositor_id");
-
-      if (!expositorId) {
-        throw new Error("Expositor não encontrado. Faça login novamente.");
-      }
-
       await clientesApi.create({
         nome: formData.nome,
         telefone: formData.telefone,
@@ -62,15 +55,15 @@ export default function ClientRegistration() {
       });
 
       toast({
-        title: "Cliente Registrado!",
+        title: "✅ Cliente Registrado!",
         description: "Cliente cadastrado com sucesso.",
       });
 
-      setTimeout(() => router.push("/painel-expositor"), 1500);
+      setTimeout(() => router.push("/painel-expositor"), 1200);
     } catch (error: any) {
       toast({
-        title: "Erro ao Registrar",
-        description: error.message || "Não foi possível registrar o cliente.",
+        title: "❌ Erro ao Registrar",
+        description: error?.message || "Não foi possível registrar o cliente.",
         variant: "destructive",
       });
     } finally {

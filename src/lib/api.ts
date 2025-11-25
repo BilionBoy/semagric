@@ -9,19 +9,11 @@ class ApiClient {
     return null;
   }
 
-  private getExpositorId(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("currentExpositorId");
-    }
-    return null;
-  }
-
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const token = this.getToken();
-    const expositorId = this.getExpositorId();
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -30,10 +22,6 @@ class ApiClient {
 
     if (token) {
       headers.Authorization = `Bearer ${token}`;
-    }
-
-    if (expositorId) {
-      headers["X-Expositor-Id"] = expositorId;
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {

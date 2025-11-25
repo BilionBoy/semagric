@@ -41,10 +41,12 @@ export default function AdminDashboard() {
   const { addTipo, deleteTipo } = useTiposManager();
 
   // =======================
-  // PROTEÇÃO DE ROTA
+  // PROTEÇÃO DE ROTA (SEM auth.isAuthenticated)
   // =======================
   useEffect(() => {
-    if (!auth.isAuthenticated()) {
+    const token = auth.getToken();
+
+    if (!token) {
       router.replace("/login");
     } else {
       setIsCheckingAuth(false);
@@ -124,7 +126,7 @@ export default function AdminDashboard() {
   }, []);
 
   // =======================
-  // LOADERS
+  // LOADING
   // =======================
   if (isCheckingAuth || loading) {
     return (
@@ -172,10 +174,8 @@ export default function AdminDashboard() {
           Dashboard Administrativo
         </h1>
 
-        {/* CARDS DE STATUS */}
         <AdminStatsCards {...stats} />
 
-        {/* GRÁFICOS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <TopExpositoresChart data={topExpositores} />
           <TopInteressesChart data={topInteresses} />
@@ -183,7 +183,6 @@ export default function AdminDashboard() {
 
         <TopCidadesChart data={topCidades} />
 
-        {/* TABS */}
         <Tabs defaultValue="exhibitors">
           <TabsList className="grid w-full grid-cols-5 bg-green-100">
             <TabsTrigger value="exhibitors">Expositores</TabsTrigger>

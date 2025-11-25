@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useExpositorData } from "@/app/cadastro-expositor/hooks/use-expositor-data";
 import { ExpositorStatsCards } from "@/app/cadastro-expositor/components/expositor-stats-cards";
+import { auth } from "@/lib/auth"; // ✅ NOVO
 
 export default function ExhibitorDashboard() {
   const router = useRouter();
@@ -18,18 +19,19 @@ export default function ExhibitorDashboard() {
     useExpositorData(expositorId);
 
   // =====================
-  // CARREGA ID DO EXPOSITOR
+  // CARREGA ID DO EXPOSITOR PELO TOKEN (JWT)
   // =====================
   useEffect(() => {
-    const id = localStorage.getItem("currentExpositorId");
+    const id = auth.getExpositorIdFromToken();
 
     if (!id) {
       toast({
-        title: "Acesso Negado",
-        description: "Você precisa estar cadastrado como expositor.",
+        title: "Sessão expirada",
+        description: "Faça login novamente como expositor.",
         variant: "destructive",
       });
-      router.push("/cadastro-expositor");
+
+      router.push("/");
       return;
     }
 
@@ -40,7 +42,7 @@ export default function ExhibitorDashboard() {
   // LOGOUT
   // =====================
   const handleLogout = () => {
-    localStorage.removeItem("currentExpositorId");
+    auth.logout(); // ✅ AGORA LIMPA TUDO CERTO
 
     toast({
       title: "Logout Realizado",
@@ -63,7 +65,7 @@ export default function ExhibitorDashboard() {
   };
 
   // =====================
-  // LOADING / ERRO
+  // LOADING
   // =====================
   if (loading) {
     return (
@@ -76,6 +78,9 @@ export default function ExhibitorDashboard() {
     );
   }
 
+  // =====================
+  // ERRO
+  // =====================
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-orange-50">
@@ -108,7 +113,8 @@ export default function ExhibitorDashboard() {
             onClick={() => router.push("/")}
             className="text-white hover:bg-green-700"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
           </Button>
 
           <div className="flex items-center gap-4">
