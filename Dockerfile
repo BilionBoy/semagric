@@ -9,10 +9,10 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3004
 
 RUN npm run build
 
-EXPOSE 3001
+EXPOSE 3004
 
-CMD ["npm", "start", "--", "-p", "3001"]
+CMD ["npm", "start"]
