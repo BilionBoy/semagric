@@ -58,12 +58,6 @@ export default function AdminDashboard() {
   // =======================
   const handleLogout = () => {
     auth.logout();
-
-    toast({
-      title: "Logout realizado",
-      description: "Você saiu do sistema.",
-    });
-
     router.push("/");
   };
 
