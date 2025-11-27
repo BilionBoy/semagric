@@ -13,6 +13,7 @@ import {
   Phone,
   MapPin,
   Briefcase,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,6 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { validateCNPJ, validateCPF } from "@/lib/validators";
 import { segmentosApi } from "@/app/cadastro-expositor/api/segmentos";
 import { expositoresApi } from "@/app/cadastro-expositor/api/expositores";
 import type { Segmento } from "@/@types";
@@ -34,11 +34,13 @@ import type { Segmento } from "@/@types";
 export default function ExhibitorRegistration() {
   const router = useRouter();
   const { toast } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [exhibitorType, setExhibitorType] = useState<"juridica" | "fisica">(
     "juridica"
   );
+
   const [formData, setFormData] = useState({
     displayName: "",
     document: "",
@@ -48,6 +50,8 @@ export default function ExhibitorRegistration() {
     phone: "",
     city: "Porto Velho",
     state: "RO",
+    password: "",
+    passwordConfirmation: "",
   });
 
   useEffect(() => {
@@ -59,14 +63,11 @@ export default function ExhibitorRegistration() {
       const data = await segmentosApi.list();
       setSegmentos(data);
     } catch (error) {
-      console.error("[v0] Error loading segments:", error);
       toast({
-        title: "Erro ao Carregar Segmentos",
-        description:
-          "Não foi possível carregar os segmentos. Verifique a conexão com a API.",
+        title: "Erro ao carregar segmentos",
+        description: "API não respondeu corretamente",
         variant: "destructive",
       });
-      setSegmentos([]);
     }
   };
 
@@ -76,63 +77,72 @@ export default function ExhibitorRegistration() {
 
   const handleTypeChange = (value: "juridica" | "fisica") => {
     setExhibitorType(value);
-    setFormData({
+    setFormData((prev) => ({
+      ...prev,
       displayName: "",
       document: "",
-      segment: "",
       responsibleName: "",
-      email: "",
-      phone: "",
-      city: "Porto Velho",
-      state: "RO",
-    });
+    }));
   };
-
-  // trechinho corrigido do seu handleSubmit
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (formData.password !== formData.passwordConfirmation) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
 
     try {
       const payload = {
         e_expositor: {
           e_evento_id: 1,
           e_tipo_expositor_id: exhibitorType === "juridica" ? 2 : 1,
-          e_segmento_id: Number.parseInt(formData.segment),
+          e_segmento_id: Number(formData.segment),
           status: "ativo",
+
           empresa: exhibitorType === "juridica" ? formData.displayName : null,
           cnpj: exhibitorType === "juridica" ? formData.document : null,
+
           nome_completo:
             exhibitorType === "fisica" ? formData.displayName : null,
           cpf: exhibitorType === "fisica" ? formData.document : null,
+
           responsavel:
             exhibitorType === "juridica"
               ? formData.responsibleName
               : formData.displayName,
+
           email_contato: formData.email,
           telefone_contato: formData.phone,
           cidade: formData.city,
           estado: formData.state,
+
+          password: formData.password,
+          password_confirmation: formData.passwordConfirmation,
         },
       };
 
       await expositoresApi.create(payload);
 
       toast({
-        title: "Cadastro realizado!",
-        description: "Faça login como expositor para continuar.",
+        title: "✅ Cadastro realizado",
+        description: "Agora você pode fazer login como expositor",
       });
 
-      // ✅ LIMPA SESSÃO ERRADA
       setTimeout(() => {
-        localStorage.clear();
-        router.replace("/");
-      }, 1500);
+        router.replace("/login");
+      }, 1200);
     } catch (error: any) {
       toast({
-        title: "Erro ao Cadastrar",
-        description: error.message || "Erro ao cadastrar expositor",
+        title: "Erro ao cadastrar",
+        description: error?.message || "Não foi possível registrar o expositor",
         variant: "destructive",
       });
     } finally {
@@ -169,251 +179,153 @@ export default function ExhibitorRegistration() {
               <h1 className="text-3xl font-bold text-green-800 mb-2">
                 Cadastro de Expositor
               </h1>
-              <p className="text-gray-600">
-                Participe da feira como empresa ou produtor autônomo
-              </p>
+              <p className="text-gray-600">Crie sua conta de expositor</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-3">
+              {/* TIPO */}
+              <div>
                 <Label className="text-green-800 font-semibold">
-                  Tipo de Expositor *
+                  Tipo de Expositor
                 </Label>
                 <RadioGroup
                   value={exhibitorType}
                   onValueChange={handleTypeChange}
-                  className="flex gap-4"
+                  className="flex gap-4 mt-2"
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="juridica" id="r1" />
-                    <Label htmlFor="r1" className="cursor-pointer">
-                      Pessoa Jurídica (Empresa)
-                    </Label>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="juridica" id="pj" />
+                    <Label htmlFor="pj">Pessoa Jurídica</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="fisica" id="r2" />
-                    <Label htmlFor="r2" className="cursor-pointer">
-                      Pessoa Física (Autônomo)
-                    </Label>
+
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="fisica" id="pf" />
+                    <Label htmlFor="pf">Pessoa Física</Label>
                   </div>
                 </RadioGroup>
               </div>
 
+              {/* CAMPOS DINÂMICOS */}
               {exhibitorType === "juridica" ? (
                 <>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="companyName"
-                      className="text-green-800 font-semibold"
-                    >
-                      Nome da Empresa *
-                    </Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-3 w-5 h-5 text-green-600" />
-                      <Input
-                        id="companyName"
-                        required
-                        value={formData.displayName}
-                        onChange={(e) =>
-                          handleChange("displayName", e.target.value)
-                        }
-                        className="pl-10 border-green-200 focus:border-green-500"
-                        placeholder="Ex: Agro Máquinas Ltda"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="cnpj"
-                      className="text-green-800 font-semibold"
-                    >
-                      CNPJ *
-                    </Label>
-                    <Input
-                      id="cnpj"
-                      required
-                      value={formData.document}
-                      onChange={(e) => handleChange("document", e.target.value)}
-                      className="border-green-200 focus:border-green-500"
-                      placeholder="00.000.000/0000-00"
-                      maxLength={18}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="responsibleName"
-                      className="text-green-800 font-semibold"
-                    >
-                      Nome do Responsável *
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 w-5 h-5 text-green-600" />
-                      <Input
-                        id="responsibleName"
-                        required
-                        value={formData.responsibleName}
-                        onChange={(e) =>
-                          handleChange("responsibleName", e.target.value)
-                        }
-                        className="pl-10 border-green-200 focus:border-green-500"
-                        placeholder="Nome completo"
-                      />
-                    </div>
-                  </div>
+                  <Input
+                    placeholder="Nome da empresa"
+                    required
+                    value={formData.displayName}
+                    onChange={(e) =>
+                      handleChange("displayName", e.target.value)
+                    }
+                  />
+
+                  <Input
+                    placeholder="CNPJ"
+                    required
+                    value={formData.document}
+                    onChange={(e) => handleChange("document", e.target.value)}
+                  />
+
+                  <Input
+                    placeholder="Nome do responsável"
+                    required
+                    value={formData.responsibleName}
+                    onChange={(e) =>
+                      handleChange("responsibleName", e.target.value)
+                    }
+                  />
                 </>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="fullName"
-                      className="text-green-800 font-semibold"
-                    >
-                      Nome Completo *
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 w-5 h-5 text-green-600" />
-                      <Input
-                        id="fullName"
-                        required
-                        value={formData.displayName}
-                        onChange={(e) =>
-                          handleChange("displayName", e.target.value)
-                        }
-                        className="pl-10 border-green-200 focus:border-green-500"
-                        placeholder="Seu nome completo"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="cpf"
-                      className="text-green-800 font-semibold"
-                    >
-                      CPF *
-                    </Label>
-                    <Input
-                      id="cpf"
-                      required
-                      value={formData.document}
-                      onChange={(e) => handleChange("document", e.target.value)}
-                      className="border-green-200 focus:border-green-500"
-                      placeholder="000.000.000-00"
-                      maxLength={14}
-                    />
-                  </div>
+                  <Input
+                    placeholder="Nome completo"
+                    required
+                    value={formData.displayName}
+                    onChange={(e) =>
+                      handleChange("displayName", e.target.value)
+                    }
+                  />
+
+                  <Input
+                    placeholder="CPF"
+                    required
+                    value={formData.document}
+                    onChange={(e) => handleChange("document", e.target.value)}
+                  />
                 </>
               )}
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="segment"
-                  className="text-green-800 font-semibold"
-                >
-                  Segmento Principal *
-                </Label>
-                <Select
-                  value={formData.segment}
-                  onValueChange={(value) => handleChange("segment", value)}
-                  required
-                >
-                  <SelectTrigger className="border-green-200 focus:border-green-500">
-                    <SelectValue placeholder="Selecione seu segmento de atuação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {segmentos.map((segment) => (
-                      <SelectItem key={segment.id} value={String(segment.id)}>
-                        {segment.descricao}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* SEGMENTO */}
+              <Select
+                value={formData.segment}
+                onValueChange={(v) => handleChange("segment", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o segmento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {segmentos.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.descricao}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-green-800 font-semibold"
-                  >
-                    E-mail de Contato *
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-5 h-5 text-green-600" />
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => handleChange("email", e.target.value)}
-                      className="pl-10 border-green-200 focus:border-green-500"
-                      placeholder="email@contato.com"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="phone"
-                    className="text-green-800 font-semibold"
-                  >
-                    Telefone/WhatsApp *
-                  </Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 w-5 h-5 text-green-600" />
-                    <Input
-                      id="phone"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      className="pl-10 border-green-200 focus:border-green-500"
-                      placeholder="(69) 99999-9999"
-                    />
-                  </div>
-                </div>
-              </div>
+              {/* CONTATOS */}
+              <Input
+                placeholder="Email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+              />
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="city"
-                    className="text-green-800 font-semibold"
-                  >
-                    Cidade *
-                  </Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 w-5 h-5 text-green-600" />
-                    <Input
-                      id="city"
-                      required
-                      value={formData.city}
-                      onChange={(e) => handleChange("city", e.target.value)}
-                      className="pl-10 border-green-200 focus:border-green-500"
-                      placeholder="Porto Velho"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="state"
-                    className="text-green-800 font-semibold"
-                  >
-                    Estado *
-                  </Label>
-                  <Input
-                    id="state"
-                    required
-                    value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
-                    className="border-green-200 focus:border-green-500"
-                    placeholder="RO"
-                    maxLength={2}
-                  />
-                </div>
-              </div>
+              <Input
+                placeholder="Telefone"
+                required
+                value={formData.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+              />
+
+              <Input
+                placeholder="Cidade"
+                required
+                value={formData.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+              />
+
+              <Input
+                placeholder="UF"
+                required
+                maxLength={2}
+                value={formData.state}
+                onChange={(e) =>
+                  handleChange("state", e.target.value.toUpperCase())
+                }
+              />
+
+              {/* SENHAS */}
+              <Input
+                type="password"
+                required
+                placeholder="Criar senha"
+                value={formData.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+              />
+
+              <Input
+                type="password"
+                required
+                placeholder="Confirmar senha"
+                value={formData.passwordConfirmation}
+                onChange={(e) =>
+                  handleChange("passwordConfirmation", e.target.value)
+                }
+              />
 
               <Button
                 type="submit"
-                className="w-full amazon-gradient hover:opacity-90 text-lg py-6"
                 disabled={loading}
+                className="w-full amazon-gradient"
               >
                 {loading ? "Cadastrando..." : "Finalizar Cadastro"}
               </Button>
