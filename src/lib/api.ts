@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://31.97.168.215:4000/api/v1";
+const API_BASE_URL = "/api";
 
 class ApiClient {
   private getToken(): string | null {
@@ -27,7 +26,6 @@ class ApiClient {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
-      credentials: "include",
     });
 
     const json = await response.json().catch(() => null);

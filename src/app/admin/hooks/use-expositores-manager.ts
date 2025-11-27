@@ -9,7 +9,15 @@ export function useExpositoresManager() {
   };
 
   const remove = async (id: number) => {
-    return await expositoresApi.delete(id);
+    try {
+      const resp = await expositoresApi.delete(id);
+      return resp;
+    } catch (err: any) {
+      console.error("Erro DELETE expositor:", err.response?.data || err);
+      throw new Error(
+        err.response?.data?.message || "Erro ao excluir expositor."
+      );
+    }
   };
 
   return {
