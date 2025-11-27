@@ -10,16 +10,16 @@ export async function GET(req: NextRequest, { params }: any) {
     "Content-Type": "application/json",
   };
 
-  // ✅ Só envia token se EXISTIR
   const auth = req.headers.get("authorization");
-  if (auth) {
+
+  // ✅ Só manda Authorization se existir DE VERDADE
+  if (auth && auth.startsWith("Bearer ")) {
     headers.Authorization = auth;
   }
 
   const res = await fetch(url, { headers });
-  const data = await res.text();
 
-  return new Response(data, {
+  return new Response(await res.text(), {
     status: res.status,
     headers: { "Content-Type": "application/json" },
   });
@@ -35,7 +35,9 @@ export async function POST(req: NextRequest, { params }: any) {
   };
 
   const auth = req.headers.get("authorization");
-  if (auth) {
+
+  // ✅ Só manda token REAL
+  if (auth && auth.startsWith("Bearer ")) {
     headers.Authorization = auth;
   }
 
@@ -45,9 +47,7 @@ export async function POST(req: NextRequest, { params }: any) {
     body,
   });
 
-  const data = await res.text();
-
-  return new Response(data, {
+  return new Response(await res.text(), {
     status: res.status,
     headers: { "Content-Type": "application/json" },
   });
