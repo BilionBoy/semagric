@@ -1,20 +1,11 @@
 const API_BASE_URL = "/api";
 
-// Rotas que NÃO DEVEM enviar token
-const PUBLIC_ENDPOINTS = ["/e_segmentos", "/e_segmentos/", "/e_expositores"];
-
 class ApiClient {
   private getToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("token");
     }
     return null;
-  }
-
-  private isPublic(endpoint: string) {
-    return PUBLIC_ENDPOINTS.some(
-      (path) => endpoint === path || endpoint.startsWith(path)
-    );
   }
 
   private async request<T>(
@@ -28,8 +19,7 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    // ✅ Só envia Authorization nas rotas privadas
-    if (token && !this.isPublic(endpoint)) {
+    if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
