@@ -9,6 +9,9 @@ export function useSegmentos() {
     setLoading(true);
     try {
       return await segmentosApi.create({ descricao });
+    } catch (err: any) {
+      console.error("Erro CREATE segmento:", err.response?.data || err);
+      throw new Error(err.response?.data?.message || "Erro ao criar segmento");
     } finally {
       setLoading(false);
     }
@@ -18,6 +21,11 @@ export function useSegmentos() {
     setLoading(true);
     try {
       return await segmentosApi.update(id, { descricao });
+    } catch (err: any) {
+      console.error("Erro UPDATE segmento:", err.response?.data || err);
+      throw new Error(
+        err.response?.data?.message || "Erro ao atualizar segmento"
+      );
     } finally {
       setLoading(false);
     }
@@ -27,6 +35,11 @@ export function useSegmentos() {
     setLoading(true);
     try {
       await segmentosApi.delete(id);
+    } catch (err: any) {
+      console.error("Erro DELETE segmento:", err.response?.data || err);
+      throw new Error(
+        err.response?.data?.message || "Erro ao remover segmento"
+      );
     } finally {
       setLoading(false);
     }
