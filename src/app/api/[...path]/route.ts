@@ -10,9 +10,9 @@ export async function GET(req: NextRequest, { params }: any) {
     "Content-Type": "application/json",
   };
 
-  // ✅ Só envia token se EXISTIR
+  // Só passa token se for REALMENTE válido
   const auth = req.headers.get("authorization");
-  if (auth) {
+  if (auth && auth !== "Bearer null") {
     headers.Authorization = auth;
   }
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: any) {
   };
 
   const auth = req.headers.get("authorization");
-  if (auth) {
+  if (auth && auth !== "Bearer null") {
     headers.Authorization = auth;
   }
 
