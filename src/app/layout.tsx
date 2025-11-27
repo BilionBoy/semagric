@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "../../styles/globals.css";
@@ -15,14 +16,16 @@ export const metadata: Metadata = {
   description:
     "Sistema de gestão para expositores e administração da feira AGROTEC PVH 2025",
   generator: "v0.app",
-  // FAVICON REMOVIDO
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="pt-BR" className={montserrat.variable}>
       <body className="font-sans antialiased">
