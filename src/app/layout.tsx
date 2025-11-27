@@ -15,23 +15,7 @@ export const metadata: Metadata = {
   description:
     "Sistema de gestão para expositores e administração da feira AGROTEC PVH 2025",
   generator: "v0.app",
-  icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
-  },
+  // FAVICON REMOVIDO
 };
 
 export default function RootLayout({
