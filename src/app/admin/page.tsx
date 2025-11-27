@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { motion } from "framer-motion";
 import { LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [newTipoExpositor, setNewTipoExpositor] = useState("");
+  const reportRef = useRef<HTMLDivElement | null>(null);
 
   const {
     expositores,
@@ -137,6 +140,42 @@ export default function AdminDashboard() {
   }
 
   // =======================
+  // PDF DOWNLOAD
+  // =======================
+  const handleDownloadPdf = async () => {
+    if (!reportRef.current) return;
+    const element = reportRef.current;
+
+    // captura o elemento como canvas
+    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgProps = (pdf as any).getImageProperties(imgData);
+    const imgWidth = pageWidth;
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+    // se precisar de múltiplas páginas
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save("relatorio-clientes.pdf");
+  };
+
+  // =======================
   // RENDER
   // =======================
   return (
@@ -232,6 +271,17 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        <div className="admin-actions">
+          <button onClick={handleDownloadPdf} className="btn btn-primary">
+            Baixar PDF
+          </button>
+        </div>
+
+        {/* content to export — inclua a tabela/lista de clientes dentro deste container */}
+        <div ref={reportRef} id="relatorio-clientes">
+          {/* ...existing code that renders clientes (tabela, cards, etc.) ... */}
+        </div>
       </main>
     </div>
   );
