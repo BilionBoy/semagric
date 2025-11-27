@@ -46,11 +46,6 @@ export default function LoginPage() {
         await auth.loginExpositor(loginData.email, loginData.password);
       }
 
-      toast({
-        title: "Login realizado!",
-        description: "Redirecionando...",
-      });
-
       console.log("✅ Login OK, redirecionando...");
 
       // ✅ Delay pequeno pra garantir navegação
