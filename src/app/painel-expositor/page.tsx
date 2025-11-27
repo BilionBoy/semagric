@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Users, DollarSign, Plus, LogOut } from "lucide-react";
@@ -14,6 +16,7 @@ export default function ExhibitorDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const [expositorId, setExpositorId] = useState<number | null>(null);
+  const reportRef = useRef<HTMLDivElement | null>(null);
 
   const { clientes, negociacoes, loading, expositor, error } =
     useExpositorData(expositorId);
@@ -62,6 +65,33 @@ export default function ExhibitorDashboard() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!reportRef.current) return;
+    const canvas = await html2canvas(reportRef.current, {
+      scale: 2,
+      useCORS: true,
+    });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgProps = (pdf as any).getImageProperties(imgData);
+    const imgWidth = pageWidth;
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    pdf.save("relatorio-clientes-expositor.pdf");
   };
 
   // =====================
@@ -247,6 +277,18 @@ export default function ExhibitorDashboard() {
             )}
           </div>
         </motion.div>
+      </div>
+
+      {/* ações / cabeçalho */}
+      <div className="mb-4 flex gap-2">
+        <button onClick={handleDownloadPdf} className="btn btn-primary">
+          Baixar relatório (PDF)
+        </button>
+      </div>
+
+      {/* seção que será capturada em PDF */}
+      <div ref={reportRef} id="relatorio-clientes-expositor">
+        {/* ...aqui mantenha/renderize a lista/tabela de clientes já existente... */}
       </div>
     </div>
   );
