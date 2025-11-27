@@ -10,11 +10,13 @@ export async function GET(req: NextRequest, { params }: any) {
     "Content-Type": "application/json",
   };
 
-  const auth = req.headers.get("authorization");
+  // ✅ NÃO envia token para segmentos
+  if (!path.startsWith("e_segmentos")) {
+    const auth = req.headers.get("authorization");
 
-  // ✅ Só manda Authorization se existir DE VERDADE
-  if (auth && auth.startsWith("Bearer ")) {
-    headers.Authorization = auth;
+    if (auth && auth.startsWith("Bearer ")) {
+      headers.Authorization = auth;
+    }
   }
 
   const res = await fetch(url, { headers });
@@ -28,17 +30,20 @@ export async function GET(req: NextRequest, { params }: any) {
 export async function POST(req: NextRequest, { params }: any) {
   const path = params.path.join("/");
   const url = `${API_BASE}/api/v1/${path}`;
+
   const body = await req.text();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  const auth = req.headers.get("authorization");
+  // ✅ NÃO envia token para segmentos
+  if (!path.startsWith("e_segmentos")) {
+    const auth = req.headers.get("authorization");
 
-  // ✅ Só manda token REAL
-  if (auth && auth.startsWith("Bearer ")) {
-    headers.Authorization = auth;
+    if (auth && auth.startsWith("Bearer ")) {
+      headers.Authorization = auth;
+    }
   }
 
   const res = await fetch(url, {
