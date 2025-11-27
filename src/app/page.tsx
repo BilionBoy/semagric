@@ -55,7 +55,7 @@ export default function HomePage() {
               className="hidden md:flex"
             >
               <UserCog className="h-4 w-4 mr-2" />
-              Acesso Admin
+              Painel Administrativo
             </Button>
           </div>
         </div>
@@ -70,17 +70,17 @@ export default function HomePage() {
           className="text-center max-w-3xl mx-auto mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-green-800 mb-6">
-            Bem-vindo à AGROTEC PVH 2025
+            Bem-vindo à AGROTEC<br /><span class="text-green-700 font-bold">Porto Velho 2025</span>
+
           </h2>
           <p className="text-lg text-gray-700 mb-8">
-            A maior feira de agronegócios da Amazônia. Gerencie seu stand,
-            registre visitantes e acompanhe o sucesso do seu negócio em tempo
-            real.
+         A 1ª Feira Tecnológica de Agroindústrias e Agricultura Familiar.
+          Controle seu stand, registre visitantes e monitore os resultados do seu negócio com dados atualizados em tempo real.
           </p>
           <img
             className="w-full h-64 object-cover rounded-2xl shadow-2xl"
-            alt="Máquinas agrícolas de alta tecnologia trabalhando em um campo verde ao pôr do sol"
-            src="https://horizons-cdn.hostinger.com/9e118616-9220-4d23-a7dc-60b1b99fea28/logo02-CNA36.jpg"
+            alt="Logo da prefeitura de Porto Velho"
+            src="/cidadePvh.png"
           />
         </motion.div>
 
@@ -121,7 +121,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-5xl font-bold mb-2">500+</div>
+              <div className="text-5xl font-bold mb-2">200+</div>
               <div className="text-green-200">Expositores Esperados</div>
             </motion.div>
             <motion.div
@@ -129,7 +129,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <div className="text-5xl font-bold mb-2">50k+</div>
+              <div className="text-5xl font-bold mb-2">40k+</div>
               <div className="text-green-200">Visitantes Estimados</div>
             </motion.div>
             <motion.div
@@ -149,7 +149,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400">
             © 2025 AGROTEC PVH. Todos os direitos reservados. Desenvolvido por
-            Smart-tech/Dhiunix/techhouse
+            Smart-tech/Dhiunix
           </p>
         </div>
       </footer>

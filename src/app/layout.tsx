@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "../../styles/globals.css";
 import { Toaster } from "../components/ui/toaster";
+import { Montserrat } from "next/font/google";
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-montserrat",
+});
 
 export const metadata: Metadata = {
   title: "AGROTEC PVH 2025 - Plataforma de Gestão",
@@ -37,8 +40,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`font-sans antialiased`}>
+    <html lang="pt-BR" className={montserrat.variable}>
+      <body className="font-sans antialiased">
         {children}
         <Toaster />
         <Analytics />
